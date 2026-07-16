@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const { db } = require("../database/database");
+const adminAuth = require("../middleware/auth");
 
 
-// Génération d'une clé aléatoire
+// Génération clé
 function generateKey() {
 
     const part1 = Math.random()
@@ -18,15 +19,17 @@ function generateKey() {
         .toUpperCase();
 
     return `LIC-${part1}-${part2}`;
+
 }
 
 
 
-// ===============================
-// GENERATE KEY
-// ===============================
+// =================================
+// GENERATE LICENSE
+// =================================
 
-router.post("/generate", (req, res) => {
+router.post("/generate", adminAuth, (req,res)=>{
+
 
     const key = generateKey();
 
@@ -37,17 +40,21 @@ router.post("/generate", (req, res) => {
         VALUES (?)
         `,
         [key],
-        function(err) {
+
+        function(err){
 
 
-            if(err) {
+            if(err){
 
                 return res.status(500).json({
+
                     success:false,
                     error:err.message
+
                 });
 
             }
+
 
 
             res.json({
@@ -59,6 +66,7 @@ router.post("/generate", (req, res) => {
             });
 
 
+
         }
     );
 
@@ -68,17 +76,17 @@ router.post("/generate", (req, res) => {
 
 
 
-// ===============================
-// VERIFY KEY
-// ===============================
+// =================================
+// VERIFY LICENSE
+// =================================
 
-router.post("/verify", (req,res)=>{
+router.post("/verify",(req,res)=>{
 
 
     const { key } = req.body;
 
 
-    if(!key) {
+    if(!key){
 
         return res.status(400).json({
 
@@ -101,7 +109,7 @@ router.post("/verify", (req,res)=>{
 
         [key],
 
-        (err, license)=>{
+        (err,license)=>{
 
 
             if(err){
@@ -130,19 +138,6 @@ router.post("/verify", (req,res)=>{
 
 
 
-            if(license.status !== "active"){
-
-                return res.json({
-
-                    success:false,
-                    message:"License inactive"
-
-                });
-
-            }
-
-
-
             res.json({
 
                 success:true,
@@ -162,14 +157,17 @@ router.post("/verify", (req,res)=>{
 
 
 
-// ===============================
-// REDEEM KEY
-// ===============================
+// =================================
+// REDEEM LICENSE
+// =================================
 
-router.post("/redeem", (req,res)=>{
+router.post("/redeem",(req,res)=>{
 
 
-    const { key, discord_id } = req.body;
+    const {
+        key,
+        discord_id
+    } = req.body;
 
 
 
@@ -178,11 +176,12 @@ router.post("/redeem", (req,res)=>{
         return res.status(400).json({
 
             success:false,
-            message:"Missing data"
+            message:"Missing key or discord id"
 
         });
 
     }
+
 
 
 
@@ -196,7 +195,7 @@ router.post("/redeem", (req,res)=>{
 
         [key],
 
-        (err, license)=>{
+        (err,license)=>{
 
 
             if(err){
@@ -217,7 +216,7 @@ router.post("/redeem", (req,res)=>{
                 return res.json({
 
                     success:false,
-                    message:"Invalid key"
+                    message:"Invalid license"
 
                 });
 
@@ -230,7 +229,7 @@ router.post("/redeem", (req,res)=>{
                 return res.json({
 
                     success:false,
-                    message:"Key already redeemed"
+                    message:"License already redeemed"
 
                 });
 
@@ -279,9 +278,91 @@ router.post("/redeem", (req,res)=>{
                     });
 
 
+
                 }
 
             );
+
+
+
+        }
+
+    );
+
+
+});
+
+
+
+
+// =================================
+// CHECK USER LICENSE
+// =================================
+
+router.post("/user",(req,res)=>{
+
+
+    const { discord_id } = req.body;
+
+
+    if(!discord_id){
+
+        return res.status(400).json({
+
+            success:false,
+            message:"Missing discord id"
+
+        });
+
+    }
+
+
+
+    db.get(
+
+        `
+        SELECT *
+        FROM licenses
+        WHERE discord_id = ?
+        `,
+
+        [discord_id],
+
+        (err,license)=>{
+
+
+            if(err){
+
+                return res.status(500).json({
+
+                    success:false,
+                    error:err.message
+
+                });
+
+            }
+
+
+
+            if(!license){
+
+                return res.json({
+
+                    success:false,
+                    message:"No license found"
+
+                });
+
+            }
+
+
+
+            res.json({
+
+                success:true,
+                license:license
+
+            });
 
 
 
