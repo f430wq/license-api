@@ -7,6 +7,7 @@ const { initDatabase } = require("./database/database");
 const licenseRoutes = require("./routes/licenses");
 const hwidRoutes = require("./routes/hwid");
 const scriptRoutes = require("./routes/script");
+const adminRoutes = require("./routes/admin");
 
 
 const app = express();
@@ -20,6 +21,8 @@ app.use(express.json());
 app.use("/licenses", licenseRoutes);
 app.use("/hwid", hwidRoutes);
 app.use("/script", scriptRoutes);
+app.use("/admin", adminRoutes);
+
 
 
 // Status
