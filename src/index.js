@@ -2,11 +2,15 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+const { initDatabase } = require("./database/database");
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+
+// Test API
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
@@ -15,6 +19,11 @@ app.get("/", (req, res) => {
         status: "online"
     });
 });
+
+
+// Initialisation database
+initDatabase();
+
 
 const PORT = process.env.PORT || 3000;
 
