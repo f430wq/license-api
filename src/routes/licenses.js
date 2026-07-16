@@ -5,6 +5,7 @@ const { db } = require("../database/database");
 const adminAuth = require("../middleware/auth");
 
 
+
 // Génération clé
 function generateKey() {
 
@@ -24,6 +25,7 @@ function generateKey() {
 
 
 
+
 // =================================
 // GENERATE LICENSE
 // =================================
@@ -31,15 +33,63 @@ function generateKey() {
 router.post("/generate", adminAuth, (req,res)=>{
 
 
+    const {
+        type = "lifetime",
+        days = null,
+        created_by = "admin"
+    } = req.body;
+
+
+
     const key = generateKey();
 
 
+    let expires_at = null;
+
+
+    if(days){
+
+        const date = new Date();
+
+        date.setDate(
+            date.getDate() + Number(days)
+        );
+
+        expires_at = date.toISOString();
+
+    }
+
+
+
+
     db.run(
+
         `
-        INSERT INTO licenses (key)
-        VALUES (?)
+        INSERT INTO licenses
+        (
+            key,
+            type,
+            expires_at,
+            created_by
+        )
+
+        VALUES
+        (
+            ?,
+            ?,
+            ?,
+            ?
+        )
         `,
-        [key],
+
+        [
+            key,
+            type,
+            expires_at,
+            created_by
+        ],
+
+
 
         function(err){
 
@@ -57,21 +107,34 @@ router.post("/generate", adminAuth, (req,res)=>{
 
 
 
+
             res.json({
 
                 success:true,
-                message:"License generated",
-                key:key
+
+                license:{
+
+                    key:key,
+                    type:type,
+                    expires_at:expires_at
+
+                }
 
             });
 
 
 
         }
+
+
     );
 
 
+
 });
+
+
+
 
 
 
@@ -86,16 +149,18 @@ router.post("/verify",(req,res)=>{
     const { key } = req.body;
 
 
+
     if(!key){
 
         return res.status(400).json({
 
             success:false,
-            message:"Missing license key"
+            message:"Missing key"
 
         });
 
     }
+
 
 
 
@@ -108,6 +173,7 @@ router.post("/verify",(req,res)=>{
         `,
 
         [key],
+
 
         (err,license)=>{
 
@@ -138,6 +204,43 @@ router.post("/verify",(req,res)=>{
 
 
 
+
+            if(license.status === "revoked"){
+
+
+                return res.json({
+
+                    success:false,
+                    message:"License revoked"
+
+                });
+
+            }
+
+
+
+
+
+            if(
+                license.expires_at &&
+                new Date(license.expires_at) < new Date()
+            ){
+
+
+                return res.json({
+
+                    success:false,
+                    message:"License expired"
+
+                });
+
+
+            }
+
+
+
+
+
             res.json({
 
                 success:true,
@@ -149,10 +252,15 @@ router.post("/verify",(req,res)=>{
 
         }
 
+
     );
 
 
 });
+
+
+
+
 
 
 
@@ -171,16 +279,18 @@ router.post("/redeem",(req,res)=>{
 
 
 
+
     if(!key || !discord_id){
 
         return res.status(400).json({
 
             success:false,
-            message:"Missing key or discord id"
+            message:"Missing data"
 
         });
 
     }
+
 
 
 
@@ -195,7 +305,9 @@ router.post("/redeem",(req,res)=>{
 
         [key],
 
+
         (err,license)=>{
+
 
 
             if(err){
@@ -208,6 +320,8 @@ router.post("/redeem",(req,res)=>{
                 });
 
             }
+
+
 
 
 
@@ -224,16 +338,25 @@ router.post("/redeem",(req,res)=>{
 
 
 
+
+
+
             if(license.discord_id){
+
 
                 return res.json({
 
                     success:false,
-                    message:"License already redeemed"
+                    message:"Already redeemed"
 
                 });
 
+
             }
+
+
+
+
 
 
 
@@ -241,17 +364,22 @@ router.post("/redeem",(req,res)=>{
 
                 `
                 UPDATE licenses
-                SET discord_id = ?,
+
+                SET
+
+                discord_id = ?,
                 status = 'used',
                 redeemed_at = CURRENT_TIMESTAMP
 
                 WHERE key = ?
+
                 `,
 
                 [
                     discord_id,
                     key
                 ],
+
 
 
                 function(error){
@@ -270,6 +398,7 @@ router.post("/redeem",(req,res)=>{
 
 
 
+
                     res.json({
 
                         success:true,
@@ -281,97 +410,21 @@ router.post("/redeem",(req,res)=>{
 
                 }
 
+
             );
 
 
 
         }
 
+
     );
+
 
 
 });
 
 
-
-
-// =================================
-// CHECK USER LICENSE
-// =================================
-
-router.post("/user",(req,res)=>{
-
-
-    const { discord_id } = req.body;
-
-
-    if(!discord_id){
-
-        return res.status(400).json({
-
-            success:false,
-            message:"Missing discord id"
-
-        });
-
-    }
-
-
-
-    db.get(
-
-        `
-        SELECT *
-        FROM licenses
-        WHERE discord_id = ?
-        `,
-
-        [discord_id],
-
-        (err,license)=>{
-
-
-            if(err){
-
-                return res.status(500).json({
-
-                    success:false,
-                    error:err.message
-
-                });
-
-            }
-
-
-
-            if(!license){
-
-                return res.json({
-
-                    success:false,
-                    message:"No license found"
-
-                });
-
-            }
-
-
-
-            res.json({
-
-                success:true,
-                license:license
-
-            });
-
-
-
-        }
-
-    );
-
-
-});
 
 
 
