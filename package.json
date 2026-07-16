@@ -1,13 +1,25 @@
 {
   "name": "license-api",
   "version": "1.0.0",
-  "description": "License API",
+  "description": "Roblox License API",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
   },
+  "keywords": [
+    "discord",
+    "roblox",
+    "license",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "express": "^4.21.2",
-    "dotenv": "^16.6.1"
+    "sqlite3": "^5.1.7",
+    "uuid": "^11.1.0"
   }
 }
