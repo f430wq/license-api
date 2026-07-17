@@ -9,6 +9,13 @@ const hwidRoutes = require("./routes/hwid");
 const scriptRoutes = require("./routes/script");
 const adminRoutes = require("./routes/admin");
 
+console.log("licenses:", typeof licenseRoutes, licenseRoutes);
+console.log("hwid:", typeof hwidRoutes, hwidRoutes);
+console.log("script:", typeof scriptRoutes, scriptRoutes);
+console.log("admin:", typeof adminRoutes, adminRoutes);
+
+process.exit();
+
 
 const app = express();
 
