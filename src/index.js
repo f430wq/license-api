@@ -53,3 +53,5 @@ app.listen(PORT,()=>{
     console.log(`✅ License API started on port ${PORT}`);
 
 });
+
+module.exports = router;
