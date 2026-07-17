@@ -344,5 +344,5 @@ router.post("/redeem",(req,res)=>{
 });
 
 
-
+module.exports = router;
 
