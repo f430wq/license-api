@@ -17,12 +17,10 @@ app.use(cors());
 app.use(express.json());
 
 
-// Routes
 app.use("/licenses", licenseRoutes);
-app.use("/hwid", hwidRoutes);
-app.use("/script", scriptRoutes);
-app.use("/admin", adminRoutes);
-
+// app.use("/hwid", hwidRoutes);
+// app.use("/script", scriptRoutes);
+// app.use("/admin", adminRoutes);
 
 
 // Status
